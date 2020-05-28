@@ -86,6 +86,10 @@ public class MysqldConfig extends ExecutableProcessConfig {
         return user.password;
     }
 
+    public boolean isGrantOption() {
+        return user.grant;
+    }
+
     public TimeZone getTimeZone() {
         return timeZone;
     }
@@ -148,6 +152,11 @@ public class MysqldConfig extends ExecutableProcessConfig {
             return this;
         }
 
+        public Builder withUser(String username, String password, boolean grant) {
+            this.user = new User(username, password, grant);
+            return this;
+        }
+
         public Builder withTimeZone(TimeZone timeZone) {
             this.timeZone = timeZone;
             return this;
@@ -201,10 +210,18 @@ public class MysqldConfig extends ExecutableProcessConfig {
     private static class User {
         private final String name;
         private final String password;
+        private final boolean grant;
 
         User(String name, String password) {
             this.name = name;
             this.password = password;
+            this.grant = false;
+        }
+
+        User(String name, String password, boolean grant) {
+            this.name = name;
+            this.password = password;
+            this.grant = grant;
         }
 
         @Override

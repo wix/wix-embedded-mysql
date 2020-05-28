@@ -46,7 +46,12 @@ public class EmbeddedMysql {
         try {
             executable.start();
             getClient(SCHEMA, mysqldConfig.getCharset()).executeCommands(
-                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';", mysqldConfig.getUsername(), mysqldConfig.getPassword()));
+                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';", mysqldConfig.getUsername(), mysqldConfig.getPassword())
+                    );
+            if (mysqldConfig.isGrantOption()) {
+                getClient(SCHEMA, mysqldConfig.getCharset()).executeCommands(
+                        format("GRANT ALL PRIVILEGES ON *.* TO '%s'@'%%' WITH GRANT OPTION", mysqldConfig.getUsername()));
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
