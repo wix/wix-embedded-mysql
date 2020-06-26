@@ -20,7 +20,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static com.wix.mysql.utils.Utils.closeCloseables;
 import static com.wix.mysql.utils.Utils.readToString;
@@ -31,6 +36,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class MysqldProcess extends AbstractProcess<MysqldConfig, MysqldExecutable, MysqldProcess> {
 
     private final static Logger logger = LoggerFactory.getLogger(MysqldProcess.class);
+    private final static long MYSQLADMIN_SHUTDOWN_TIMEOUT_SECONDS = 10;
 
     private NotifyingStreamProcessor outputWatch;
 
@@ -44,6 +50,8 @@ public class MysqldProcess extends AbstractProcess<MysqldConfig, MysqldExecutabl
 
     @Override
     public void onAfterProcessStart(final ProcessControl process, final IRuntimeConfig runtimeConfig) throws IOException {
+        //This line is not required in flapdoodle 3+
+        setProcessId(process.getPid());
         outputWatch = new NotifyingStreamProcessor(StreamToLineProcessor.wrap(runtimeConfig.getProcessOutput().getOutput()));
         Processors.connect(process.getReader(), outputWatch);
         Processors.connect(process.getError(), outputWatch);
@@ -61,9 +69,34 @@ public class MysqldProcess extends AbstractProcess<MysqldConfig, MysqldExecutabl
         }
     }
 
+
+
     @Override
     protected List<String> getCommandLine(Distribution distribution, MysqldConfig config, IExtractedFileSet exe) throws IOException {
         return Service.commandLine(config, exe);
+    }
+
+    private boolean attemptToKillProcessAndWaitForItToDie(Supplier<Boolean> killCode, int millisecondsToWait){
+        boolean result = killCode.get();
+        if (!result) {
+            return false;
+        }
+        Instant start = Instant.now();
+        Instant timeoutPoint= start.plus(Duration.ofMillis(millisecondsToWait));
+        int attempt = 0;
+        logger.debug("Checking if process dies...");
+        do {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (!isProcessRunning()) {
+                return true;
+            }
+            logger.debug("Process still up after {} milliseconds", Duration.between(start, Instant.now()).toMillis());
+        } while(Instant.now().isBefore(timeoutPoint));
+        return false;
     }
 
     @Override
@@ -71,11 +104,11 @@ public class MysqldProcess extends AbstractProcess<MysqldConfig, MysqldExecutabl
         logger.info("try to stop mysqld");
         if (!stopUsingMysqldadmin()) {
             logger.warn("could not stop mysqld via mysqladmin, try next");
-            if (!sendKillToProcess()) {
+            if (!attemptToKillProcessAndWaitForItToDie(this::sendKillToProcess, 5000)) {
                 logger.warn("could not stop mysqld, try next");
-                if (!sendTermToProcess()) {
+                if (!attemptToKillProcessAndWaitForItToDie(this::sendTermToProcess, 5000)) {
                     logger.warn("could not stop mysqld, try next");
-                    if (!tryKillToProcess()) {
+                    if (!attemptToKillProcessAndWaitForItToDie(this::tryKillToProcess, 5000)) {
                         logger.warn("could not stop mysqld the second time, try one last thing");
                         try {
                             stopProcess();
@@ -85,8 +118,8 @@ public class MysqldProcess extends AbstractProcess<MysqldConfig, MysqldExecutabl
                     }
                 }
             }
-
         }
+        logger.info("mysqld stopped.");
     }
 
     @Override
@@ -97,45 +130,47 @@ public class MysqldProcess extends AbstractProcess<MysqldConfig, MysqldExecutabl
         ResultMatchingListener shutdownListener = outputWatch.addListener(new ResultMatchingListener(": Shutdown complete"));
         boolean retValue = false;
         Reader stdErr = null;
-
         try {
             String cmd = Paths.get(getExecutable().getFile().baseDir().getAbsolutePath(), "bin", "mysqladmin").toString();
-
-            Process p = Runtime.getRuntime().exec(new String[]{
-                    cmd, "--no-defaults", "--protocol=tcp",
+            ProcessBuilder pb = new ProcessBuilder(Arrays.asList(cmd, "--no-defaults", "--protocol=tcp",
                     format("-u%s", MysqldConfig.SystemDefaults.USERNAME),
                     format("--port=%s", getConfig().getPort()),
-                    "shutdown"});
-
-            //TODO: make wait with timeout
-            retValue = p.waitFor() == 0;
-
+                    "shutdown"));
+            Process p = pb.start();
+            logger.debug("mysqladmin started");
             stdErr = new InputStreamReader(p.getErrorStream());
+            retValue = p.waitFor(MYSQLADMIN_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!retValue) {
+                p.destroy();
+                logger.error("mysql shutdown timed out after {} seconds", MYSQLADMIN_SHUTDOWN_TIMEOUT_SECONDS);
+            }
+            else {
+                retValue = p.exitValue() == 0;
+                if (retValue) {
+                    shutdownListener.waitForResult(getConfig().getTimeout(MILLISECONDS));
 
-            if (retValue) {
-                shutdownListener.waitForResult(getConfig().getTimeout(MILLISECONDS));
+                    //TODO: figure out a better strategy for this. It seems windows does not actually shuts down process after it says it does.
+                    if (Platform.detect() == Windows) {
+                        Thread.sleep(2000);
+                    }
 
-                //TODO: figure out a better strategy for this. It seems windows does not actually shuts down process after it says it does.
-                if (Platform.detect() == Windows) {
-                    Thread.sleep(2000);
-                }
+                    if (!shutdownListener.isInitWithSuccess()) {
+                        logger.error("mysql shutdown failed. Expected to find in output: 'Shutdown complete', got: " + shutdownListener.getFailureFound());
+                        retValue = false;
+                    } else {
+                        logger.debug("mysql shutdown succeeded.");
+                        retValue = true;
+                    }
 
-                if (!shutdownListener.isInitWithSuccess()) {
-                    logger.error("mysql shutdown failed. Expected to find in output: 'Shutdown complete', got: " + shutdownListener.getFailureFound());
-                    retValue = false;
                 } else {
-                    logger.debug("mysql shutdown succeeded.");
-                    retValue = true;
-                }
+                    String errOutput = readToString(stdErr);
 
-            } else {
-                String errOutput = readToString(stdErr);
-
-                if (errOutput.contains("Can't connect to MySQL server on")) {
-                    logger.warn("mysql was already shutdown - no need to add extra shutdown hook - process does it out of the box.");
-                    retValue = true;
-                } else {
-                    logger.error("mysql shutdown failed with error code: " + p.waitFor() + " and message: " + errOutput);
+                    if (errOutput.contains("Can't connect to MySQL server on")) {
+                        logger.warn("mysql was already shutdown - no need to add extra shutdown hook - process does it out of the box.");
+                        retValue = true;
+                    } else {
+                        logger.error("mysql shutdown failed with error code: " + p.waitFor() + " and message: " + errOutput);
+                    }
                 }
             }
 
