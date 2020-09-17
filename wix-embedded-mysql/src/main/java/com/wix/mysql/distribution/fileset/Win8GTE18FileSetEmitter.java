@@ -9,10 +9,12 @@ import java.util.Objects;
 import static de.flapdoodle.embed.process.config.store.FileType.Executable;
 import static de.flapdoodle.embed.process.config.store.FileType.Library;
 
-public class Win8FileSetEmitter implements FileSetEmitter {
+public class Win8GTE18FileSetEmitter implements FileSetEmitter {
     @Override
     public boolean matches(Platform platform, Version version) {
-        return !platform.isUnixLike() && Objects.equals(version.getMajorVersion(), "8.0");
+        return !platform.isUnixLike()
+        		&& Objects.equals(version.getMajorVersion(), "8.0")
+        		&& (version.getMinorVersion() >= 18);
     }
 
     @Override
@@ -22,6 +24,8 @@ public class Win8FileSetEmitter implements FileSetEmitter {
                 .addEntry(Library, "bin/mysql.exe")
                 .addEntry(Library, "bin/mysqladmin.exe")
                 .addEntry(Library, "share/english/errmsg.sys")
+                .addEntry(Library, "bin/libcrypto-1_1-x64.dll")
+                .addEntry(Library, "bin/libssl-1_1-x64.dll")
 //                .addEntry(Library, "share/fill_help_tables.sql")
 //                .addEntry(Library, "share/mysql_sys_schema.sql")
 //                .addEntry(Library, "share/mysql_system_tables.sql")

@@ -6,6 +6,8 @@ import de.flapdoodle.embed.process.config.ISupportConfig;
 import de.flapdoodle.embed.process.distribution.IVersion;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -25,7 +27,8 @@ public class MysqldConfig extends ExecutableProcessConfig {
     private final Timeout timeout;
     private final List<ServerVariable> serverVariables;
     private final String tempDir;
-
+    private static Logger logger = LoggerFactory.getLogger(MysqldConfig.class);
+    
     protected MysqldConfig(
             final IVersion version,
             final int port,
@@ -113,7 +116,7 @@ public class MysqldConfig extends ExecutableProcessConfig {
         private Charset charset = Charset.defaults();
         private User user = new User("auser", "sa");
         private TimeZone timeZone = TimeZone.getTimeZone("UTC");
-        private Timeout timeout = new Timeout(30, SECONDS);
+        private Timeout timeout = new Timeout(60, SECONDS);
         private final List<ServerVariable> serverVariables = new ArrayList<>();
         private String tempDir = "target/";
 
@@ -194,6 +197,7 @@ public class MysqldConfig extends ExecutableProcessConfig {
 
 
         public MysqldConfig build() {
+        	logger.info("Timeout: " + timeout.length + " " + timeout.unit.name().toLowerCase() + "(s)");
             return new MysqldConfig(version, port, charset, user, timeZone, timeout, serverVariables, tempDir);
         }
     }

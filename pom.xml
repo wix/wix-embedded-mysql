@@ -3,7 +3,7 @@
 
     <groupId>com.wix</groupId>
     <artifactId>wix-embedded-mysql-modules</artifactId>
-    <version>4.6.2-SNAPSHOT</version>
+    <version>4.6.2.1-SNAPSHOT</version>
     <name>Wix Embedded MySql Modules aggregator</name>
     <description>Wix Embedded MySql Modules aggregator</description>
     <url>https://github.com/wix/wix-embedded-mysql</url>

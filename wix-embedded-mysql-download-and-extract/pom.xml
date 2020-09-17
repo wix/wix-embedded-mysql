@@ -1,97 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.wix</groupId>
-    <artifactId>wix-embedded-mysql-download-and-extract</artifactId>
-    <version>4.6.2-SNAPSHOT</version>
-    <name>Wix Embedded Mysql Download and Extract</name>
-    <description>Cli tool to predownload/precache mysql artifacts for wix-embedded-mysql</description>
-    <url>https://github.com/wix/wix-embedded-mysql/tree/master/wix-embedded-mysql-download-and-extract</url>
+	<artifactId>wix-embedded-mysql-download-and-extract</artifactId>
+	<name>Wix Embedded Mysql Download and Extract</name>
+	<description>Cli tool to predownload/precache mysql artifacts for wix-embedded-mysql</description>
+	<url>https://github.com/wix/wix-embedded-mysql/tree/master/wix-embedded-mysql-download-and-extract</url>
 
-    <parent>
-        <groupId>com.wix</groupId>
-        <artifactId>wix-embedded-mysql-modules</artifactId>
-        <version>4.6.2-SNAPSHOT</version>
-    </parent>
+	<parent>
+		<groupId>com.wix</groupId>
+		<artifactId>wix-embedded-mysql-modules</artifactId>
+		<version>4.6.2.1-SNAPSHOT</version>
+	</parent>
 
-    <dependencies>
+	<dependencies>
 
-        <dependency>
-            <groupId>com.wix</groupId>
-            <artifactId>wix-embedded-mysql</artifactId>
-            <version>4.6.2-SNAPSHOT</version>
-        </dependency>
+		<dependency>
+			<groupId>com.wix</groupId>
+			<artifactId>wix-embedded-mysql</artifactId>
+			<version>${parent.version}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.process</artifactId>
-            <version>${flapdoodle.process.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>de.flapdoodle.embed</groupId>
+			<artifactId>de.flapdoodle.embed.process</artifactId>
+			<version>${flapdoodle.process.version}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>${scala.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.library.version}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-core_${scala.library.version}</artifactId>
+			<version>${specs2.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-junit_${scala.library.version}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-junit_${scala.library.version}</artifactId>
+			<version>${specs2.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-matcher-extra_${scala.library.version}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-matcher-extra_${scala.library.version}</artifactId>
+			<version>${specs2.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+			<scope>test</scope>
+		</dependency>
 
-    </dependencies>
-    
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>
-                                        com.wix.mysql.MysqlDownloadAndExtract
-                                    </mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>
+										com.wix.mysql.MysqlDownloadAndExtract
+									</mainClass>
+								</manifest>
+							</archive>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

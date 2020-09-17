@@ -1,137 +1,137 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.wix</groupId>
-    <artifactId>wix-embedded-mysql</artifactId>
-    <version>4.6.2-SNAPSHOT</version>
-    <name>Wix Embedded MySql</name>
-    <description>Embedded MySql for E2E/IT tests</description>
-    <url>https://github.com/wix/wix-embedded-mysql/tree/master/wix-embedded-mysql</url>
+	<name>Wix Embedded MySql</name>
+	<description>Embedded MySql for E2E/IT tests</description>
+	<url>https://github.com/wix/wix-embedded-mysql/tree/master/wix-embedded-mysql</url>
 
-    <parent>
-        <groupId>com.wix</groupId>
-        <artifactId>wix-embedded-mysql-modules</artifactId>
-        <version>4.6.2-SNAPSHOT</version>
-    </parent>
+	<parent>
+		<groupId>com.wix</groupId>
+		<artifactId>wix-embedded-mysql-modules</artifactId>
+		<version>4.6.2.1-SNAPSHOT</version>
+	</parent>
 
-    <properties>
-        <spring.jdbc.version>4.2.5.RELEASE</spring.jdbc.version>
-        <mysql.connector.version>8.0.11</mysql.connector.version>
-        <slf4j.version>1.7.10</slf4j.version>
-        <logback.version>1.1.6</logback.version>
-        <commons-compress.version>1.19</commons-compress.version>
-    </properties>
+	<properties>
+		<spring.jdbc.version>4.2.5.RELEASE</spring.jdbc.version>
+		<mysql.connector.version>8.0.11</mysql.connector.version>
+		<slf4j.version>1.7.10</slf4j.version>
+		<logback.version>1.1.6</logback.version>
+		<commons-compress.version>1.19</commons-compress.version>
+	</properties>
 
-    <dependencies>
+	<dependencies>
 
-        <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.process</artifactId>
-            <version>${flapdoodle.process.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>de.flapdoodle.embed</groupId>
+			<artifactId>de.flapdoodle.embed.process</artifactId>
+			<version>${flapdoodle.process.version}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-        </dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.6</version>
+		</dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${commons-compress.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>${commons-compress.version}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>org.tukaani</groupId>
-            <artifactId>xz</artifactId>
-            <version>1.8</version>
-        </dependency>
+		<dependency>
+			<groupId>org.tukaani</groupId>
+			<artifactId>xz</artifactId>
+			<version>1.8</version>
+		</dependency>
 
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <version>${spring.jdbc.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>${spring.jdbc.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.connector.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>${mysql.connector.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-dbcp2</artifactId>
-            <version>2.1.1</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.1.1</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>${scala.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.library.version}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-core_${scala.library.version}</artifactId>
+			<version>${specs2.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-junit_${scala.library.version}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-junit_${scala.library.version}</artifactId>
+			<version>${specs2.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-matcher-extra_${scala.library.version}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.specs2</groupId>
+			<artifactId>specs2-matcher-extra_${scala.library.version}</artifactId>
+			<version>${specs2.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.nanohttpd</groupId>
-            <artifactId>nanohttpd-nanolets</artifactId>
-            <version>2.3.1</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.nanohttpd</groupId>
+			<artifactId>nanohttpd-nanolets</artifactId>
+			<version>2.3.1</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>jar</groupId>
-            <artifactId>external-jar-with-schemas</artifactId>
-            <version>1.0.1</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>jar</groupId>
+			<artifactId>external-jar-with-schemas</artifactId>
+			<version>1.0.1</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.littleshoot</groupId>
-            <artifactId>littleproxy</artifactId>
-            <version>1.1.2</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.littleshoot</groupId>
+			<artifactId>littleproxy</artifactId>
+			<version>1.1.2</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>org.nanohttpd</groupId> <!-- <groupId>com.nanohttpd</groupId> for 2.1.0 and earlier -->
-            <artifactId>nanohttpd</artifactId>
-            <version>2.3.1</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.nanohttpd</groupId> <!-- <groupId>com.nanohttpd</groupId> for 2.1.0 and earlier -->
+			<artifactId>nanohttpd</artifactId>
+			<version>2.3.1</version>
+			<scope>test</scope>
+		</dependency>
 
-    </dependencies>
+	</dependencies>
 
+	<artifactId>wix-embedded-mysql</artifactId>
 </project>

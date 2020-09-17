@@ -23,7 +23,7 @@ class MysqldConfigTest extends SpecWithJUnit {
       mysqldConfig.getUsername mustEqual "auser"
       mysqldConfig.getPassword mustEqual "sa"
       mysqldConfig.getTimeZone mustEqual TimeZone.getTimeZone("UTC")
-      mysqldConfig.getTimeout(TimeUnit.SECONDS) mustEqual 30
+      mysqldConfig.getTimeout(TimeUnit.SECONDS) mustEqual 60
     }
 
     "accept custom port, user, charset, timezone" in {
