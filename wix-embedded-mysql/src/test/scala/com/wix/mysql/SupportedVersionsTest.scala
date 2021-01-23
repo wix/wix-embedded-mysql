@@ -15,6 +15,7 @@ class SupportedVersionsTest extends IntegrationTest {
     Version.v5_6_latest,
     Version.v5_7_latest,
     Version.v8_0_11,
+    Version.v8_0_17,
     Version.v8_latest) filter (_.supportsCurrentPlatform)
 
   trait Context extends Scope {

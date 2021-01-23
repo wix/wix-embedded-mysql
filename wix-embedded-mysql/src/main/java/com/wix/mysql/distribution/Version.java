@@ -42,7 +42,8 @@ public enum Version implements IVersion {
     v5_7_latest(v5_7_27),
     v8_0_11("8.0", 11, MacOsVersion.v10_13),
     v8_0_17("8.0", 17, MacOsVersion.v10_14, TXZ, Platform.Linux, Platform.Windows, Platform.OS_X),
-    v8_latest(v8_0_17);
+    v8_0_21("8.0", 21, MacOsVersion.v10_15, TXZ, Platform.Linux, Platform.Windows, Platform.OS_X),
+    v8_latest(v8_0_21);
 
     private enum MacOsVersion {
         v10_6("osx"),
@@ -51,7 +52,8 @@ public enum Version implements IVersion {
         v10_11("osx"),
         v10_12("macos"),
         v10_13("macos"),
-        v10_14("macos");
+        v10_14("macos"),
+        v10_15("macos");
 
         private final String osName;
 
