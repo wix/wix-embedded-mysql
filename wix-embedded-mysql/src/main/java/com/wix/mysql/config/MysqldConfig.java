@@ -1,6 +1,7 @@
 package com.wix.mysql.config;
 
-import com.wix.mysql.distribution.Version;
+import com.wix.mysql.distribution.WixVersion;
+
 import de.flapdoodle.embed.process.config.ExecutableProcessConfig;
 import de.flapdoodle.embed.process.config.ISupportConfig;
 import de.flapdoodle.embed.process.distribution.IVersion;
@@ -62,8 +63,8 @@ public class MysqldConfig extends ExecutableProcessConfig {
         this.tempDir = tempDir;
     }
 
-    public Version getVersion() {
-        return (Version) version;
+    public WixVersion getVersion() {
+        return (WixVersion) version;
     }
 
     public Charset getCharset() {
@@ -98,7 +99,7 @@ public class MysqldConfig extends ExecutableProcessConfig {
         return tempDir;
     }
 
-    public static Builder aMysqldConfig(final Version version) {
+    public static Builder aMysqldConfig(final WixVersion version) {
         return new Builder(version);
     }
 

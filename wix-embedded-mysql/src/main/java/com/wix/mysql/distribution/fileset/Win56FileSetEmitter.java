@@ -1,6 +1,7 @@
 package com.wix.mysql.distribution.fileset;
 
-import com.wix.mysql.distribution.Version;
+import com.wix.mysql.distribution.WixVersion;
+
 import de.flapdoodle.embed.process.config.store.FileSet;
 import de.flapdoodle.embed.process.distribution.Platform;
 
@@ -11,7 +12,7 @@ import static de.flapdoodle.embed.process.config.store.FileType.Library;
 
 public class Win56FileSetEmitter implements FileSetEmitter {
     @Override
-    public boolean matches(Platform platform, Version version) {
+    public boolean matches(Platform platform, WixVersion version) {
         return !platform.isUnixLike() && Objects.equals(version.getMajorVersion(), "5.6");
     }
 

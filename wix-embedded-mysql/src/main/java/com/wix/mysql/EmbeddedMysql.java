@@ -2,7 +2,8 @@ package com.wix.mysql;
 
 import com.wix.mysql.config.*;
 import com.wix.mysql.config.MysqldConfig.SystemDefaults;
-import com.wix.mysql.distribution.Version;
+import com.wix.mysql.distribution.WixVersion;
+
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +108,7 @@ public class EmbeddedMysql {
     }
 
     public static Builder anEmbeddedMysql(
-            final Version version,
+            final WixVersion version,
             final AdditionalConfig... additionalConfigs) {
 
         MysqldConfig mysqldConfig = MysqldConfig.aMysqldConfig(version).build();

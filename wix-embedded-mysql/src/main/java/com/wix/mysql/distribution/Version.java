@@ -3,16 +3,18 @@ package com.wix.mysql.distribution;
 import com.wix.mysql.exceptions.UnsupportedPlatformException;
 import com.wix.mysql.utils.Utils;
 import de.flapdoodle.embed.process.distribution.ArchiveType;
-import de.flapdoodle.embed.process.distribution.IVersion;
+import de.flapdoodle.embed.process.distribution.BitSize;
 import de.flapdoodle.embed.process.distribution.Platform;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static de.flapdoodle.embed.process.distribution.ArchiveType.*;
+import static de.flapdoodle.embed.process.distribution.BitSize.B32;
+
 import static java.lang.String.format;
 
-public enum Version implements IVersion {
+public enum Version implements WixVersion {
 
     v5_5_40("5.5", 40, MacOsVersion.v10_6, TGZ, Platform.Linux, Platform.OS_X),
     v5_5_50("5.5", 50, MacOsVersion.v10_9, TGZ, Platform.Linux, Platform.OS_X),
@@ -115,17 +117,47 @@ public enum Version implements IVersion {
         }
     }
 
+
+    private String fileName() {
+        switch (currentPlatform()) {
+            case Windows:
+                return format("mysql-%s", version());
+            case OS_X:
+                return format("mysql-%s-%s", version(), macOsVersion);
+            case Linux:
+                return format("mysql-%s-%s", version(), gcLibVersion());
+            default:
+                throw new UnsupportedPlatformException("Unrecognized platform, currently not supported");
+        }
+    }
+
+    private String version() {
+        return format("%s.%s", majorVersion, minorVersion);
+    }
+
+    public String arch() {
+        BitSize bs = BitSize.detect();
+        switch (currentPlatform()) {
+            case OS_X:
+                return bs == B32 ? "x86" : "x86_64";
+            case Linux:
+                return bs == B32 ? "i686" : "x86_64";
+            case Windows:
+                return bs == B32 ? "32" : "x64";
+            default:
+                throw new UnsupportedPlatformException("Unrecognized platform, currently not supported");
+        }
+    }
+
     @Override
     public String asInDownloadPath() {
         assertPlatformIsSupported();
-
         switch (currentPlatform()) {
             case Windows:
-                return format("/%s/mysql-%s.%s", path(), majorVersion, minorVersion);
+                return format("/%s/%s-win%s", path(), fileName(), arch());
             case OS_X:
-                return format("/%s/mysql-%s.%s-%s", path(), majorVersion, minorVersion, macOsVersion);
             case Linux:
-                return format("/%s/mysql-%s.%s-%s", path(), majorVersion, minorVersion, gcLibVersion());
+                return format("/%s/%s-%s", path(), fileName(), arch());
             default:
                 throw new UnsupportedPlatformException("Unrecognized platform, currently not supported");
         }

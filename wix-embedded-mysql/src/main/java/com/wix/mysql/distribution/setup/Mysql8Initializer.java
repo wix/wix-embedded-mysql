@@ -1,7 +1,7 @@
 package com.wix.mysql.distribution.setup;
 
 import com.wix.mysql.config.MysqldConfig;
-import com.wix.mysql.distribution.Version;
+import com.wix.mysql.distribution.WixVersion;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.extract.IExtractedFileSet;
 import org.apache.commons.io.FileUtils;
@@ -14,7 +14,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class Mysql8Initializer implements Initializer {
     @Override
-    public boolean matches(Version version) {
+    public boolean matches(WixVersion version) {
         return version.getMajorVersion().equals("8.0");
     }
 

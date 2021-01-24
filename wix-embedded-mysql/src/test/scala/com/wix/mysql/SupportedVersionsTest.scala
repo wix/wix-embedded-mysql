@@ -2,7 +2,7 @@ package com.wix.mysql
 
 import com.wix.mysql.EmbeddedMysql.anEmbeddedMysql
 import com.wix.mysql.config.MysqldConfig
-import com.wix.mysql.distribution.Version
+import com.wix.mysql.distribution.{Version, WixVersion}
 import com.wix.mysql.support.IntegrationTest
 import com.wix.mysql.support.IntegrationTest.testConfigBuilder
 import org.specs2.matcher.Scope
@@ -10,7 +10,7 @@ import org.specs2.specification.core.Fragment
 
 class SupportedVersionsTest extends IntegrationTest {
 
-  val versionsToTest: Seq[Version] = Seq(
+  val versionsToTest: Seq[WixVersion] = Seq(
     Version.v5_5_latest,
     Version.v5_6_latest,
     Version.v5_7_latest,

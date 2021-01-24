@@ -1,7 +1,7 @@
 package com.wix.mysql.distribution.service;
 
 import com.wix.mysql.config.MysqldConfig;
-import com.wix.mysql.distribution.Version;
+import com.wix.mysql.distribution.WixVersion;
 import com.wix.mysql.utils.Utils;
 import de.flapdoodle.embed.process.collections.Collections;
 import de.flapdoodle.embed.process.extract.IExtractedFileSet;
@@ -15,7 +15,7 @@ import static java.lang.String.format;
 
 public class BaseCommandEmitter implements CommandEmitter {
     @Override
-    public boolean matches(Version version) {
+    public boolean matches(WixVersion version) {
         return true;
     }
 

@@ -18,7 +18,7 @@ public class Service {
             new UserProvidedArgumentsEmitter());
 
     public static List<String> commandLine(final MysqldConfig config, final IExtractedFileSet exe) throws IOException {
-        Version version = config.getVersion();
+        WixVersion version = config.getVersion();
         ServiceCommandBuilder commandBuilder = new ServiceCommandBuilder(version.toString());
         for (CommandEmitter emitter : emitters) {
             if (emitter.matches(version)) {

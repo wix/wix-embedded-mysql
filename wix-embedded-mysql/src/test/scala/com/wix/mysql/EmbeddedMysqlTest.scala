@@ -2,7 +2,6 @@ package com.wix.mysql
 
 import java.io.File
 import java.util.concurrent.TimeUnit
-
 import com.wix.mysql.EmbeddedMysql._
 import com.wix.mysql.ScriptResolver.classPathScript
 import com.wix.mysql.config.Charset._
@@ -14,7 +13,6 @@ import com.wix.mysql.distribution.Version
 import com.wix.mysql.exceptions.CommandFailedException
 import com.wix.mysql.support.IntegrationTest._
 import com.wix.mysql.support.{HttpProxyServerSupport, IntegrationTest}
-
 import scala.collection.JavaConverters._
 
 

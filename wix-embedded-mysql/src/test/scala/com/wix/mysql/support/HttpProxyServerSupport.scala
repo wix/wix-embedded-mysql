@@ -3,9 +3,8 @@ package com.wix.mysql.support
 import java.io.{File, FileInputStream}
 import java.nio.file.Files
 import java.util.UUID
-
 import com.wix.mysql.PackagePaths
-import com.wix.mysql.distribution.Version
+import com.wix.mysql.distribution.WixVersion
 import de.flapdoodle.embed.process.distribution.Distribution
 import de.flapdoodle.embed.process.io.directories.UserHome
 import fi.iki.elonen.NanoHTTPD
@@ -14,7 +13,7 @@ import org.littleshoot.proxy.{ActivityTrackerAdapter, FlowContext, HttpProxyServ
 
 trait HttpProxyServerSupport {
 
-  def withProxyOn[T](proxyPort: Int, targetPort: Int, servedVersion: Version)(f: (ConnectedActivityTracker, Int, Int, Version) => T): T = {
+  def withProxyOn[T](proxyPort: Int, targetPort: Int, servedVersion: WixVersion)(f: (ConnectedActivityTracker, Int, Int, WixVersion) => T): T = {
     val tracker = new ConnectedActivityTracker()
     val proxyBootstrap = DefaultHttpProxyServer
       .bootstrap()
@@ -64,7 +63,7 @@ object ProxyFiles {
   val tmpDir: File = new UserHome(".embedmysql").asFile()
   type Restore = (File, () => Unit)
 
-  def apply(version: Version): Restore = {
+  def apply(version: WixVersion): Restore = {
     val source = new File(tmpDir, new PackagePaths().getPath(Distribution.detectFor(version)))
     val target = new File(tmpDir, UUID.randomUUID().toString)
     if (!target.exists()) {

@@ -2,13 +2,12 @@ package com.wix.mysql.support
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import ch.qos.logback.classic.Level.INFO
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.{Logger, LoggerContext}
 import ch.qos.logback.core.read.ListAppender
 import com.wix.mysql.config.MysqldConfig
-import com.wix.mysql.distribution.Version
+import com.wix.mysql.distribution.{Version, WixVersion}
 import com.wix.mysql.{EmbeddedMysql, Sources, SqlScriptSource}
 import de.flapdoodle.embed.process.io.directories.UserHome
 import javax.sql.DataSource
@@ -21,7 +20,6 @@ import org.specs2.mutable.SpecWithJUnit
 import org.specs2.specification.BeforeAfterEach
 import org.springframework.dao.DataAccessException
 import org.springframework.jdbc.core.JdbcTemplate
-
 import scala.collection.JavaConversions._
 import scala.reflect._
 
@@ -81,9 +79,9 @@ abstract class IntegrationTest extends SpecWithJUnit with BeforeAfterEach
 }
 
 object IntegrationTest {
-  val targetTestVersion: Version = Version.v5_7_latest
+  val targetTestVersion: WixVersion = Version.v5_7_latest
 
-  def testConfigBuilder(version: Version = targetTestVersion): MysqldConfig.Builder = MysqldConfig
+  def testConfigBuilder(version: WixVersion = targetTestVersion): MysqldConfig.Builder = MysqldConfig
     .aMysqldConfig(version)
     .withTimeout(60, TimeUnit.SECONDS)
 }

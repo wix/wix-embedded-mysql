@@ -21,7 +21,7 @@ public class FileSet {
 
     public static de.flapdoodle.embed.process.config.store.FileSet emit(
             final Platform platform,
-            final Version version) {
+            final WixVersion version) {
 
         for (FileSetEmitter emitter : emitters) {
             if (emitter.matches(platform, version)) {
