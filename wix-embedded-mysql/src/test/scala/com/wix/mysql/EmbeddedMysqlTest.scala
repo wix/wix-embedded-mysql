@@ -2,19 +2,18 @@ package com.wix.mysql
 
 import java.io.File
 import java.util.concurrent.TimeUnit
-
 import com.wix.mysql.EmbeddedMysql._
 import com.wix.mysql.ScriptResolver.classPathScript
 import com.wix.mysql.config.Charset._
 import com.wix.mysql.config.DownloadConfig.aDownloadConfig
 import com.wix.mysql.config.MysqldConfig.{SystemDefaults, aMysqldConfig}
+import com.wix.mysql.config.Privilege
 import com.wix.mysql.config.ProxyFactory.aHttpProxy
 import com.wix.mysql.config.SchemaConfig.aSchemaConfig
 import com.wix.mysql.distribution.Version
 import com.wix.mysql.exceptions.CommandFailedException
 import com.wix.mysql.support.IntegrationTest._
 import com.wix.mysql.support.{HttpProxyServerSupport, IntegrationTest}
-
 import scala.collection.JavaConverters._
 
 
@@ -28,10 +27,10 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(config))
 
       mysqld must
-        haveCharsetOf(UTF8MB4) and
+        haveCharsetOf(UTF8MB4, "auser") and
         beAvailableOn(3310, "auser", "sa", SystemDefaults.SCHEMA) and
-        haveServerTimezoneMatching("UTC") and
-        haveSystemVariable("basedir", contain(pathFor("/target/", "/mysql-5.7-")))
+        haveServerTimezoneMatching("UTC", "auser") and
+        haveSystemVariable("basedir", "auser", contain(pathFor("/target/", "/mysql-5.7-")))
     }
 
     "use custom values provided via MysqldConfig" in {
@@ -47,10 +46,10 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(config))
 
       mysqld must
-        haveCharsetOf(LATIN1) and
+        haveCharsetOf(LATIN1, "zeUser") and
         beAvailableOn(1112, "zeUser", "zePassword", SystemDefaults.SCHEMA) and
-        haveServerTimezoneMatching("US/Michigan") and
-        haveSystemVariable("basedir", contain(pathFor(tempDir, "/mysql-5.7-")))
+        haveServerTimezoneMatching("US/Michigan", "zeUser") and
+        haveSystemVariable("basedir", "zeUser", contain(pathFor(tempDir, "/mysql-5.7-")))
     }
 
 
@@ -68,7 +67,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
             .build())
           .addSchema("aschema"))
 
-        mysqld must beAvailableOn(config, "aschema")
+        mysqld must beAvailableOn(config, "auser", "aschema")
         proxy.wasDownloaded must beTrue
       }
     }
@@ -81,7 +80,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(config))
 
-      mysqld must haveSystemVariable("max_connect_errors", ===("666"))
+      mysqld must haveSystemVariable("max_connect_errors", "auser", ===("666"))
     }
 
     "not allow to override library-managed system variables" in {
@@ -108,12 +107,12 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(mysqldConfig).addSchema(schemaConfig))
 
-      anUpdate(mysqld, onSchema = "aSchema", sql = "insert into t1 values(10)") must beSuccessful
-      aSelect[java.lang.Long](mysqld, onSchema = "aSchema", sql = "select col1 from t1 where col1 = 10;") mustEqual 10
+      anUpdate(mysqld, onSchema = "aSchema", asUser="auser", sql = "insert into t1 values(10)") must beSuccessful
+      aSelect[java.lang.Long](mysqld, onSchema = "aSchema", asUser="auser", sql = "select col1 from t1 where col1 = 10;") mustEqual 10
 
       mysqld.reloadSchema(schemaConfig)
 
-      aSelect[java.lang.Long](mysqld, onSchema = "aSchema", sql = "select col1 from t1 where col1 = 10;") must
+      aSelect[java.lang.Long](mysqld, onSchema = "aSchema", asUser="auser", sql = "select col1 from t1 where col1 = 10;") must
         failWith("Incorrect result size: expected 1, actual 0")
     }
   }
@@ -125,7 +124,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(config).addSchema("aSchema"))
 
       mysqld must
-        haveSchemaCharsetOf(UTF8MB4, "aSchema") and
+        haveSchemaCharsetOf(UTF8MB4, "auser", "aSchema") and
         beAvailableOn(3310, "auser", "sa", andSchema = "aSchema")
     }
 
@@ -138,7 +137,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(config).addSchema(schema))
 
       mysqld must
-        haveSchemaCharsetOf(LATIN1, "aSchema") and
+        haveSchemaCharsetOf(LATIN1, "auser", "aSchema") and
         beAvailableOn(3310, "auser", "sa", andSchema = "aSchema")
     }
 
@@ -149,7 +148,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(config).addSchema(schema))
 
       mysqld must
-        haveSchemaCharsetOf(LATIN1, "aSchema") and
+        haveSchemaCharsetOf(LATIN1, "auser", "aSchema") and
         beAvailableOn(3310, "auser", "sa", andSchema = "aSchema")
     }
 
@@ -157,7 +156,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build)
         .addSchema("aSchema", aMigrationWith("create table t1 (col1 INTEGER);")))
 
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col1) from t1;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col1) from t1;") must beSuccessful
     }
 
     "apply migrations from multiple files" in {
@@ -167,8 +166,8 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
           aMigrationWith("create table t2 (col1 INTEGER);"))
       )
 
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col1) from t1;") must beSuccessful
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col1) from t2;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col1) from t1;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col1) from t2;") must beSuccessful
     }
 
     "apply migrations via SchemaConfig" in {
@@ -183,10 +182,10 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build).addSchema(config))
 
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col1) from t1;") must beSuccessful
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col1) from t2;") must beSuccessful
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col1) from t3;") must beSuccessful
-      aQuery(mysqld, onSchema = "aSchema", sql = "select count(col2) from t4;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col1) from t1;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col1) from t2;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col1) from t3;") must beSuccessful
+      aQuery(mysqld, onSchema = "aSchema", asUser="auser", sql = "select count(col2) from t4;") must beSuccessful
     }
 
     "quote created table name" in {
@@ -196,7 +195,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build).addSchema(config))
 
-      aQuery(mysqld, onSchema = "a-table", sql = "select count(col1) from t1;") must beSuccessful
+      aQuery(mysqld, onSchema = "a-table", asUser="auser", sql = "select count(col1) from t1;") must beSuccessful
     }
 
   }
@@ -208,11 +207,11 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build).addSchema(schemaConfig))
 
-      mysqld must haveSchemaCharsetOf(UTF8MB4, schemaConfig.getName)
+      mysqld must haveSchemaCharsetOf(UTF8MB4, "auser", schemaConfig.getName)
 
       mysqld.dropSchema(schemaConfig)
 
-      mysqld must notHaveSchema(schemaConfig.getName)
+      mysqld must notHaveSchema(schemaConfig.getName, "auser")
     }
 
     "fail on dropping of non existing schema" in {
@@ -220,7 +219,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build))
 
-      mysqld must notHaveSchema(schemaConfig.getName)
+      mysqld must notHaveSchema(schemaConfig.getName, "auser")
 
       mysqld.dropSchema(schemaConfig) must throwA[CommandFailedException]
     }
@@ -230,11 +229,11 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build))
 
-      mysqld must notHaveSchema(schemaConfig.getName)
+      mysqld must notHaveSchema(schemaConfig.getName, "auser")
 
       mysqld.addSchema(schemaConfig)
 
-      mysqld must haveSchemaCharsetOf(UTF8MB4, schemaConfig.getName)
+      mysqld must haveSchemaCharsetOf(UTF8MB4, "auser", schemaConfig.getName)
     }
 
     "fail on adding existing schema" in {
@@ -242,7 +241,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
 
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build).addSchema(schemaConfig))
 
-      mysqld must haveSchemaCharsetOf(UTF8MB4, schemaConfig.getName)
+      mysqld must haveSchemaCharsetOf(UTF8MB4, "auser", schemaConfig.getName)
 
       mysqld.addSchema(schemaConfig) must throwA[CommandFailedException]
     }
@@ -260,7 +259,7 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       val mysqld = start(anEmbeddedMysql(testConfigBuilder().build))
         .addSchema(config)
 
-      def rowCountInTable() = aSelect[java.lang.Long](mysqld, onSchema = schemaName, sql = "select count(*) from t1;")
+      def rowCountInTable() = aSelect[java.lang.Long](mysqld, onSchema = schemaName, asUser="auser", sql = "select count(*) from t1;")
 
       rowCountInTable() mustEqual 0
 
@@ -273,6 +272,26 @@ class EmbeddedMysqlTest extends IntegrationTest with HttpProxyServerSupport {
       mysqld.executeScripts(schemaName, classPathScript("data/arbitrary_script2.sql")).asScala must haveSize(1) and contain(contain("col1"))
 
       rowCountInTable() mustEqual 2
+    }
+  }
+
+  "EmbeddedMysql users" should {
+    "honor privileges" in {
+      val config = testConfigBuilder()
+        .withUser("rwUser", "rwPassword")
+        .withUser("roUser", "roPassword", Privilege.SELECT)
+        .build
+      val schemaConfig = aSchemaConfig("aSchema")
+        .withScripts(
+          aMigrationWith("create table t1 (col1 INTEGER);"))
+        .build()
+
+      val mysqld = start(anEmbeddedMysql(config).addSchema(schemaConfig))
+
+      anUpdate(mysqld, onSchema = "aSchema", asUser="rwUser", sql = "insert into t1 values(10)") must beSuccessful
+      aQuery(mysqld, asUser = "rwUser", onSchema="aSchema", sql = "select * from t1") must beSuccessful
+      aQuery(mysqld, asUser = "roUser", onSchema="aSchema", sql = "select * from t1") must beSuccessful
+      anUpdate(mysqld, onSchema = "aSchema", asUser="roUser", sql = "insert into t1 values(10)") must failWith("INSERT command denied to user 'roUser")
     }
   }
 

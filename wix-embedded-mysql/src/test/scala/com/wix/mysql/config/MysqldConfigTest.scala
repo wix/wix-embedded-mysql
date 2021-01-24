@@ -20,25 +20,33 @@ class MysqldConfigTest extends SpecWithJUnit {
       mysqldConfig.getPort mustEqual 3310
       mysqldConfig.getVersion mustEqual v5_6_latest
       mysqldConfig.getCharset mustEqual defaults()
-      mysqldConfig.getUsername mustEqual "auser"
-      mysqldConfig.getPassword mustEqual "sa"
+      mysqldConfig.getUsers.size() mustEqual 1
+      mysqldConfig.getUsers.containsKey("auser") mustEqual true
+      mysqldConfig.getUsers.get("auser").getPassword mustEqual "sa"
+      mysqldConfig.getUsers.get("auser").getPrivilege mustEqual Privilege.ALL
       mysqldConfig.getTimeZone mustEqual TimeZone.getTimeZone("UTC")
       mysqldConfig.getTimeout(TimeUnit.SECONDS) mustEqual 30
     }
 
-    "accept custom port, user, charset, timezone" in {
+    "accept custom port, users, charset, timezone" in {
       val mysqldConfig = aMysqldConfig(v5_6_latest)
         .withPort(1111)
         .withCharset(LATIN1)
         .withUser("otheruser", "otherpassword")
+        .withUser("yetotheruser", "yetotherpassword", Privilege.SELECT)
         .withTimeZone("Europe/Vilnius")
         .withTimeout(20, TimeUnit.SECONDS)
         .build()
 
       mysqldConfig.getPort mustEqual 1111
       mysqldConfig.getCharset mustEqual LATIN1
-      mysqldConfig.getUsername mustEqual "otheruser"
-      mysqldConfig.getPassword mustEqual "otherpassword"
+      mysqldConfig.getUsers.size() mustEqual 2
+      mysqldConfig.getUsers.containsKey("otheruser") mustEqual true
+      mysqldConfig.getUsers.containsKey("yetotheruser") mustEqual true
+      mysqldConfig.getUsers.get("otheruser").getPassword mustEqual "otherpassword"
+      mysqldConfig.getUsers.get("otheruser").getPrivilege mustEqual Privilege.ALL
+      mysqldConfig.getUsers.get("yetotheruser").getPassword mustEqual "yetotherpassword"
+      mysqldConfig.getUsers.get("yetotheruser").getPrivilege mustEqual Privilege.SELECT
       mysqldConfig.getTimeZone mustEqual TimeZone.getTimeZone("Europe/Vilnius")
       mysqldConfig.getTimeout(TimeUnit.MILLISECONDS) mustEqual 20000
     }
@@ -66,6 +74,18 @@ class MysqldConfigTest extends SpecWithJUnit {
       aMysqldConfig(v5_6_latest)
         .withUser("root", "doesnotmatter")
         .build() must throwA[IllegalArgumentException](message = "Usage of username 'root' is forbidden")
+    }
+
+    "fail if building with v8 privileges for v5 mysql" in {
+      aMysqldConfig(v5_5_52)
+        .withUser("auser", "doesnotmatter", Privilege.CREATE_ROLE)
+        .build() must throwA[IllegalArgumentException](message = "Privilege CREATE_ROLE not compatible with Version 5.5.52")
+      aMysqldConfig(v5_6_36)
+        .withUser("auser", "doesnotmatter", Privilege.CREATE_ROLE)
+        .build() must throwA[IllegalArgumentException](message = "Privilege CREATE_ROLE not compatible with Version 5.6.36")
+      aMysqldConfig(v5_7_27)
+        .withUser("auser", "doesnotmatter", Privilege.CREATE_ROLE)
+        .build() must throwA[IllegalArgumentException](message = "Privilege CREATE_ROLE not compatible with Version 5.7.27")
     }
 
   }

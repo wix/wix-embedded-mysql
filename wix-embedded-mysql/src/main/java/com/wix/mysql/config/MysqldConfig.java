@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,7 @@ public class MysqldConfig extends ExecutableProcessConfig {
 
     private final int port;
     private final Charset charset;
-    private final User user;
+    private final HashMap<String,User> users;
     private final TimeZone timeZone;
     private final Timeout timeout;
     private final List<ServerVariable> serverVariables;
@@ -30,7 +31,7 @@ public class MysqldConfig extends ExecutableProcessConfig {
             final IVersion version,
             final int port,
             final Charset charset,
-            final User user,
+            final HashMap<String,User> users,
             final TimeZone timeZone,
             final Timeout timeout,
             final List<ServerVariable> serverVariables,
@@ -49,13 +50,13 @@ public class MysqldConfig extends ExecutableProcessConfig {
             }
         });
 
-        if (user.name.equals("root")) {
+        if (users.containsKey("root")) {
             throw new IllegalArgumentException("Usage of username 'root' is forbidden as it's reserved for system use");
         }
 
         this.port = port;
         this.charset = charset;
-        this.user = user;
+        this.users = users;
         this.timeZone = timeZone;
         this.timeout = timeout;
         this.serverVariables = serverVariables;
@@ -78,13 +79,13 @@ public class MysqldConfig extends ExecutableProcessConfig {
         return this.timeout.to(target);
     }
 
-    public String getUsername() {
-        return user.name;
-    }
-
-    public String getPassword() {
-        return user.password;
-    }
+//    public String getUsername() {
+//        return user.name;
+//    }
+//
+//    public String getPassword() {
+//        return user.password;
+//    }
 
     public TimeZone getTimeZone() {
         return timeZone;
@@ -107,11 +108,15 @@ public class MysqldConfig extends ExecutableProcessConfig {
         return ToStringBuilder.reflectionToString(this);
     }
 
+    public HashMap<String, User> getUsers() {
+        return users;
+    }
+
     public static class Builder {
         private IVersion version;
         private int port = 3310;
         private Charset charset = Charset.defaults();
-        private User user = new User("auser", "sa");
+        private HashMap<String,User> users = new HashMap<>();
         private TimeZone timeZone = TimeZone.getTimeZone("UTC");
         private Timeout timeout = new Timeout(30, SECONDS);
         private final List<ServerVariable> serverVariables = new ArrayList<>();
@@ -144,7 +149,12 @@ public class MysqldConfig extends ExecutableProcessConfig {
         }
 
         public Builder withUser(String username, String password) {
-            this.user = new User(username, password);
+            this.users.put(username, new User(username, password));
+            return this;
+        }
+
+        public Builder withUser(String username, String password, Privilege privilege) {
+            this.users.put(username, new User(username, password, privilege));
             return this;
         }
 
@@ -194,22 +204,44 @@ public class MysqldConfig extends ExecutableProcessConfig {
 
 
         public MysqldConfig build() {
-            return new MysqldConfig(version, port, charset, user, timeZone, timeout, serverVariables, tempDir);
+            if(users.isEmpty()) users.put("auser", new User("auser", "sa"));
+            users.values().stream().map(u -> u.privilege).forEach(p -> p.checkCompatiblityWithVersion((Version)version));
+            return new MysqldConfig(version, port, charset, users, timeZone, timeout, serverVariables, tempDir);
         }
     }
 
-    private static class User {
+    public static class User {
         private final String name;
         private final String password;
+        private final Privilege privilege;
 
         User(String name, String password) {
             this.name = name;
             this.password = password;
+            this.privilege = Privilege.ALL;
+        }
+
+        User(String name, String password, Privilege privilege) {
+            this.name = name;
+            this.password = password;
+            this.privilege = privilege;
         }
 
         @Override
         public String toString() {
             return ReflectionToStringBuilder.toStringExclude(this, "password");
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public Privilege getPrivilege() {
+            return privilege;
         }
     }
 

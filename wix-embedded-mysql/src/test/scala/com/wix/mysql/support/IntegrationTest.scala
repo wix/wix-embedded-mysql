@@ -2,7 +2,6 @@ package com.wix.mysql.support
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import ch.qos.logback.classic.Level.INFO
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.{Logger, LoggerContext}
@@ -17,12 +16,13 @@ import org.apache.commons.io.FileUtils._
 import org.slf4j
 import org.slf4j.LoggerFactory
 import org.slf4j.LoggerFactory.getLogger
+import org.specs2.matcher.Matcher
 import org.specs2.mutable.SpecWithJUnit
 import org.specs2.specification.BeforeAfterEach
 import org.springframework.dao.DataAccessException
 import org.springframework.jdbc.core.JdbcTemplate
-
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.reflect._
 
 abstract class IntegrationTest extends SpecWithJUnit with BeforeAfterEach
@@ -58,7 +58,7 @@ abstract class IntegrationTest extends SpecWithJUnit with BeforeAfterEach
     appender.start()
 
     new Iterable[String] {
-      def iterator = appender.list map (_.getMessage) iterator
+      def iterator: Iterator[String] = appender.list.asScala.map(_.getMessage).iterator
     }
   }
 
@@ -91,8 +91,12 @@ object IntegrationTest {
 trait JdbcSupport {
   self: IntegrationTest =>
 
-  def aDataSource(config: MysqldConfig, schema: String): DataSource =
-    aDataSource(config.getUsername, config.getPassword, config.getPort, schema)
+  def aDataSource(config: MysqldConfig, userName: String, schema: String): DataSource = {
+    config.getUsers.asScala.get(userName) match {
+      case Some(user) => aDataSource(user.getName, user.getPassword, config.getPort, schema)
+      case _ => throw new RuntimeException(s"user: $userName was not defined in config")
+    }
+  }
 
   def aDataSource(user: String, password: String, port: Int, schema: String): DataSource = {
     val dataSource: BasicDataSource = new BasicDataSource
@@ -103,26 +107,26 @@ trait JdbcSupport {
     dataSource
   }
 
-  def aJdbcTemplate(mysqld: EmbeddedMysql, forSchema: String): JdbcTemplate =
-    new JdbcTemplate(aDataSource(mysqld.getConfig, forSchema))
+  def aJdbcTemplate(mysqld: EmbeddedMysql, forUser: String, forSchema: String): JdbcTemplate =
+    new JdbcTemplate(aDataSource(mysqld.getConfig, forUser, forSchema))
 
   def aSelect[T: ClassTag](ds: DataSource, sql: String): T =
     new JdbcTemplate(ds).queryForObject(sql, classTag[T].runtimeClass.asInstanceOf[Class[T]])
 
-  def aSelect[T: ClassTag](mysqld: EmbeddedMysql, onSchema: String, sql: String): T =
-    aJdbcTemplate(mysqld, onSchema).queryForObject(sql, classTag[T].runtimeClass.asInstanceOf[Class[T]])
+  def aSelect[T: ClassTag](mysqld: EmbeddedMysql, asUser: String, onSchema: String, sql: String): T =
+    aJdbcTemplate(mysqld, asUser, onSchema).queryForObject(sql, classTag[T].runtimeClass.asInstanceOf[Class[T]])
 
-  def aQuery(mysqld: EmbeddedMysql, onSchema: String, sql: String): Unit =
-    aJdbcTemplate(mysqld, forSchema = onSchema).execute(sql)
+  def aQuery(mysqld: EmbeddedMysql, asUser: String, onSchema: String, sql: String): Unit =
+    aJdbcTemplate(mysqld, asUser, forSchema = onSchema).execute(sql)
 
-  def anUpdate(mysqld: EmbeddedMysql, onSchema: String, sql: String): Unit =
-    aJdbcTemplate(mysqld, forSchema = onSchema).execute(sql)
+  def anUpdate(mysqld: EmbeddedMysql, asUser: String, onSchema: String, sql: String): Unit =
+    aJdbcTemplate(mysqld, asUser, forSchema = onSchema).execute(sql)
 
   def aMigrationWith(sql: String): SqlScriptSource = Sources.fromFile(createTempFile(sql))
 
-  def beSuccessful = not(throwAn[Exception])
+  def beSuccessful: AnyRef with Matcher[Any] = not(throwAn[Exception])
 
-  def failWith(fragment: String) = throwA[DataAccessException].like { case e =>
+  def failWith(fragment: String): AnyRef with Matcher[Any] = throwA[DataAccessException].like { case e =>
     e.getMessage must contain(fragment)
   }
 

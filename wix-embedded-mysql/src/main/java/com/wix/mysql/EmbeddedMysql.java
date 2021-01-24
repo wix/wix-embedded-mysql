@@ -45,8 +45,11 @@ public class EmbeddedMysql {
 
         try {
             executable.start();
-            getClient(SCHEMA, mysqldConfig.getCharset()).executeCommands(
-                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';", mysqldConfig.getUsername(), mysqldConfig.getPassword()));
+            for(MysqldConfig.User user: mysqldConfig.getUsers().values()) {
+                getClient(SCHEMA, mysqldConfig.getCharset()).executeCommands(
+                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';", user.getName(), user.getPassword()));
+
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -85,10 +88,13 @@ public class EmbeddedMysql {
     public EmbeddedMysql addSchema(final SchemaConfig schema) {
         Charset effectiveCharset = or(schema.getCharset(), config.getCharset());
 
-        getClient(SystemDefaults.SCHEMA, effectiveCharset).executeCommands(
-                format("CREATE DATABASE `%s` CHARACTER SET = %s COLLATE = %s;",
-                        schema.getName(), effectiveCharset.getCharset(), effectiveCharset.getCollate()),
-                format("GRANT ALL ON `%s`.* TO '%s'@'%%';", schema.getName(), config.getUsername()));
+        List<String> sqls = new ArrayList<>();
+        sqls.add(format("CREATE DATABASE `%s` CHARACTER SET = %s COLLATE = %s;",
+            schema.getName(), effectiveCharset.getCharset(), effectiveCharset.getCollate()));
+        for(MysqldConfig.User user: config.getUsers().values()) {
+            sqls.add(format("GRANT %s ON `%s`.* TO '%s'@'%%';", user.getPrivilege(), schema.getName(), user.getName()));
+        }
+            getClient(SystemDefaults.SCHEMA, effectiveCharset).executeCommands(sqls.toArray(new String[0]));
 
         MysqlClient client = getClient(schema.getName(), effectiveCharset);
         client.executeScripts(schema.getScripts());
